@@ -2,9 +2,26 @@ import { useState, useEffect } from "react";
 import { ReminderCard, Reminder } from "@/components/ReminderCard";
 import { AddReminderDialog } from "@/components/AddReminderDialog";
 import { Bell, ListChecks } from "lucide-react";
+import { NotificationService } from "@/lib/notifications";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const { toast } = useToast();
+
+  // Request notification permissions on mount
+  useEffect(() => {
+    const requestPermissions = async () => {
+      const granted = await NotificationService.requestPermissions();
+      if (granted) {
+        toast({
+          title: "Notifications enabled",
+          description: "You'll receive alerts when reminders are due",
+        });
+      }
+    };
+    requestPermissions();
+  }, []);
 
   // Load reminders from localStorage on mount
   useEffect(() => {
@@ -27,22 +44,42 @@ const Index = () => {
     }
   }, [reminders]);
 
-  const addReminder = (newReminder: { title: string; description?: string; dueDate: Date }) => {
+  const addReminder = async (newReminder: { title: string; description?: string; dueDate: Date }) => {
     const reminder: Reminder = {
       id: crypto.randomUUID(),
       ...newReminder,
       completed: false,
     };
     setReminders((prev) => [...prev, reminder].sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()));
+    
+    // Schedule notification
+    const notificationId = NotificationService.generateNotificationId(reminder.id);
+    await NotificationService.scheduleNotification({
+      id: notificationId,
+      title: reminder.title,
+      body: reminder.description || "Time to complete this reminder!",
+      scheduleAt: reminder.dueDate,
+    });
   };
 
-  const toggleComplete = (id: string) => {
+  const toggleComplete = async (id: string) => {
+    const reminder = reminders.find((r) => r.id === id);
+    if (reminder && !reminder.completed) {
+      // Cancel notification when marking as complete
+      const notificationId = NotificationService.generateNotificationId(id);
+      await NotificationService.cancelNotification(notificationId);
+    }
+    
     setReminders((prev) =>
       prev.map((r) => (r.id === id ? { ...r, completed: !r.completed } : r))
     );
   };
 
-  const deleteReminder = (id: string) => {
+  const deleteReminder = async (id: string) => {
+    // Cancel notification when deleting
+    const notificationId = NotificationService.generateNotificationId(id);
+    await NotificationService.cancelNotification(notificationId);
+    
     setReminders((prev) => prev.filter((r) => r.id !== id));
     // Update localStorage after deletion
     const updated = reminders.filter((r) => r.id !== id);

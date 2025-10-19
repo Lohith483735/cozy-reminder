@@ -4,11 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Priority, Category } from "./ReminderCard";
 
 interface AddReminderDialogProps {
-  onAdd: (reminder: { title: string; description?: string; dueDate: Date }) => void;
+  onAdd: (reminder: { title: string; description?: string; dueDate: Date; priority: Priority; category: Category }) => void;
 }
 
 export const AddReminderDialog = ({ onAdd }: AddReminderDialogProps) => {
@@ -17,6 +19,8 @@ export const AddReminderDialog = ({ onAdd }: AddReminderDialogProps) => {
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
+  const [priority, setPriority] = useState<Priority>("medium");
+  const [category, setCategory] = useState<Category>("personal");
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -46,6 +50,8 @@ export const AddReminderDialog = ({ onAdd }: AddReminderDialogProps) => {
       title: title.trim(),
       description: description.trim() || undefined,
       dueDate,
+      priority,
+      category,
     });
 
     // Reset form
@@ -53,6 +59,8 @@ export const AddReminderDialog = ({ onAdd }: AddReminderDialogProps) => {
     setDescription("");
     setDate("");
     setTime("");
+    setPriority("medium");
+    setCategory("personal");
     setOpen(false);
 
     toast({
@@ -114,6 +122,36 @@ export const AddReminderDialog = ({ onAdd }: AddReminderDialogProps) => {
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
               />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="priority">Priority</Label>
+              <Select value={priority} onValueChange={(value) => setPriority(value as Priority)}>
+                <SelectTrigger id="priority">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="high">High Priority</SelectItem>
+                  <SelectItem value="medium">Medium Priority</SelectItem>
+                  <SelectItem value="low">Low Priority</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="category">Category</Label>
+              <Select value={category} onValueChange={(value) => setCategory(value as Category)}>
+                <SelectTrigger id="category">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="work">Work</SelectItem>
+                  <SelectItem value="personal">Personal</SelectItem>
+                  <SelectItem value="health">Health</SelectItem>
+                  <SelectItem value="shopping">Shopping</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="flex gap-3 pt-4">

@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.02bd99cf75e24f938301e44f351635f4',
+  appId: 'com.lovable.cozyreminder',
   appName: 'cozy-reminder',
   webDir: 'dist',
   server: {
